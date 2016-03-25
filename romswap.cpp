@@ -10,9 +10,18 @@ enum class swapmode
     UNDEFINED
 };
 
+enum class chunkmode
+{
+    CHUNK8,
+    CHUNK16,
+    CHUNK32,
+    UNDEFINED
+};
+
 struct config
 {
-    swapmode mode;
+    swapmode swap;
+    chunkmode chunk;
 };
 
 config parseconfig(char* cfgfn)
@@ -56,10 +65,17 @@ config parseconfig(char* cfgfn)
 
         if(property == "mode")
         {
-            if(value == "16bits") res.mode = swapmode::BITS16;
-            else if(value == "32bits") res.mode = swapmode::BITS32;
-            else if(value == "64bits") res.mode = swapmode::BITS64;
-            else res.mode = swapmode::UNDEFINED;
+            if(value == "16bits") res.swap = swapmode::BITS16;
+            else if(value == "32bits") res.swap = swapmode::BITS32;
+            else if(value == "64bits") res.swap = swapmode::BITS64;
+            else res.swap = swapmode::UNDEFINED;
+        }
+        if(property == "chunk")
+        {
+            if(value == "8bits") res.chunk = chunkmode::CHUNK8;
+            else if(value == "16bits") res.chunk = chunkmode::CHUNK16;
+            else if(value == "32bits") res.chunk = chunkmode::CHUNK32;
+            else res.chunk = chunkmode::UNDEFINED;
         }
     }
 
@@ -106,7 +122,7 @@ int main(int ac, char** av)
         long pos = ftell(in);
         fseek(in,0,SEEK_SET);
 
-        if(cfg.mode == swapmode::BITS16)
+        if(cfg.swap == swapmode::BITS16)
         {
             for(int i = 0; i<pos; i+=2)
             {
@@ -118,7 +134,7 @@ int main(int ac, char** av)
                 fputc(tmp_lo,out);
             }
         }
-        else if(cfg.mode == swapmode::BITS32)
+        else if(cfg.swap == swapmode::BITS32)
         {
             for(int i = 0; i<pos; i+=4)
             {
@@ -130,13 +146,23 @@ int main(int ac, char** av)
                 tmp2 = fgetc(in);
                 tmp3 = fgetc(in);
                 tmp4 = fgetc(in);
-                fputc(tmp4,out);
-                fputc(tmp3,out);
-                fputc(tmp2,out);
-                fputc(tmp1,out);
+                if(cfg.chunk == chunkmode::CHUNK8)
+                {
+                    fputc(tmp4,out);
+                    fputc(tmp3,out);
+                    fputc(tmp2,out);
+                    fputc(tmp1,out);
+                }
+                else if(cfg.chunk == chunkmode::CHUNK16)
+                {
+                    fputc(tmp3,out);
+                    fputc(tmp4,out);
+                    fputc(tmp1,out);
+                    fputc(tmp2,out);
+                }
             }
         }
-        else if(cfg.mode == swapmode::BITS64)
+        else if(cfg.swap == swapmode::BITS64)
         {
             for(int i = 0; i<pos; i+=8)
             {
@@ -156,14 +182,39 @@ int main(int ac, char** av)
                 tmp6 = fgetc(in);
                 tmp7 = fgetc(in);
                 tmp8 = fgetc(in);
-                fputc(tmp8,out);
-                fputc(tmp7,out);
-                fputc(tmp6,out);
-                fputc(tmp5,out);
-                fputc(tmp4,out);
-                fputc(tmp3,out);
-                fputc(tmp2,out);
-                fputc(tmp1,out);
+                if(cfg.chunk == chunkmode::CHUNK8)
+                {
+                    fputc(tmp8,out);
+                    fputc(tmp7,out);
+                    fputc(tmp6,out);
+                    fputc(tmp5,out);
+                    fputc(tmp4,out);
+                    fputc(tmp3,out);
+                    fputc(tmp2,out);
+                    fputc(tmp1,out);
+                }
+                else if(cfg.chunk == chunkmode::CHUNK16)
+                {
+                    fputc(tmp7,out);
+                    fputc(tmp8,out);
+                    fputc(tmp5,out);
+                    fputc(tmp6,out);
+                    fputc(tmp3,out);
+                    fputc(tmp4,out);
+                    fputc(tmp1,out);
+                    fputc(tmp2,out);
+                }
+                else if(cfg.chunk == chunkmode::CHUNK32)
+                {
+                    fputc(tmp5,out);
+                    fputc(tmp6,out);
+                    fputc(tmp7,out);
+                    fputc(tmp8,out);
+                    fputc(tmp1,out);
+                    fputc(tmp2,out);
+                    fputc(tmp3,out);
+                    fputc(tmp4,out);
+                }
             }
         }
 
